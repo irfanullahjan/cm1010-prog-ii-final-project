@@ -8,7 +8,7 @@ function RoadVehiclesMiles() {
     this.id = 'road-vehicles-miles';
 
     // Title to display above the plot.
-    this.title = 'Road vehicles: Billion miles travelled in a year';
+    this.title = 'Road Vehicles: Billion miles travelled in a year';
 
     // Names for each axis.
     this.xAxisLabel = 'Year';
@@ -116,7 +116,20 @@ function RoadVehiclesMiles() {
         var previous;
         var numYears = this.endYear - this.startYear;
 
-        var fillclr = ['purple', 'blue', 'green', 'yellow','orange','red']
+        var fillclr = ['blue', 'green', 'yellow','orange','red'];
+
+        // Data lables
+        textAlign(LEFT);
+        var legendX = 90;
+        var legendY = 20;
+        for (var i = 1; i < this.data.getColumnCount(); i++) {
+            stroke('black');
+            fill(fillclr[i-1]);
+            rect(legendX,legendY+25*i,15,15);
+            noStroke();
+            fill(0);
+            text(this.data.columns[i],legendX+30,legendY+9+25*i);
+        }
 
         // Loop over all rows and draw a line from the previous value to
         // the current.
@@ -124,7 +137,7 @@ function RoadVehiclesMiles() {
             previous = null;
             beginShape();
             for (var i = 0; i < this.data.getRowCount(); i++) {
-                fill(fillclr[j]);
+                fill(fillclr[j-1]);
                 noStroke();
                 // Create an object to store data for the current year.
                 var current = {
