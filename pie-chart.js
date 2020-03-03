@@ -45,13 +45,22 @@ Arrays must be the same length!`);
             }
 
             fill(colour);
-            stroke(0);
             strokeWeight(1);
 
             arc(this.x, this.y,
                 this.diameter, this.diameter,
                 lastAngle, lastAngle + angles[i] + 0.001); // Hack for 0!
 
+            //Display percentages
+            if (angles[i] > 0.15) {  // if angle is smaller than 0.15 radians, no percentage figure is shown
+                var percentageAngle = lastAngle + angles[i] / 2;
+                var percentageX = this.x + this.diameter * Math.cos(percentageAngle) / 3;
+                var percentageY = this.y + this.diameter * Math.sin(percentageAngle) / 3;
+                fill(255);
+                textSize(20);
+                text(Math.round(100*angles[i]/TWO_PI)+'%', percentageX-10, percentageY);
+            }
+            
             if (labels) {
                 this.makeLegendItem(labels[i], i, colour);
             }

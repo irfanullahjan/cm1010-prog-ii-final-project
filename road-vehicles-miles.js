@@ -67,7 +67,14 @@ function RoadVehiclesMiles() {
                     }
                 }
                 return inputdata;
-            });
+            }
+        );
+        this.dataOriginal = loadTable(
+            './data/road-vehicles/road-vehicle-miles.csv', 'csv', 'header',
+            function (inputdata) {
+                return inputdata;
+            }
+        );
     };
 
     this.setup = function () {
@@ -118,17 +125,36 @@ function RoadVehiclesMiles() {
 
         var fillclr = ['blue', 'green', 'yellow','orange','red'];
 
-        // Data lables
+
+        //Draw vertical line at mouseX below x-axis
+        if (mouseX > marginSize * 2 && mouseX < width - marginSize) {
+            // Map mouseX to years rounded
+            var mouseYear = map(mouseX, marginSize * 2, width - marginSize, this.startYear, this.endYear).toFixed(0);
+            var mouseYearRow = this.dataOriginal.findRow(mouseYear, 'Year');
+            console.log(mouseYearRow);
+            stroke(0);
+            line(mouseX, marginSize, mouseX, height - marginSize);
+        } else {
+            var mouseYear = null;
+            var mouseYearRow = null;
+        }
+
+        // Data ledgend
         textAlign(LEFT);
         var legendX = 90;
         var legendY = 20;
         for (var i = 1; i < this.data.getColumnCount(); i++) {
             stroke('black');
             fill(fillclr[i-1]);
-            rect(legendX,legendY+25*i,15,15);
+            rect(legendX,legendY+25*i,15,15); // colored square
             noStroke();
             fill(0);
-            text(this.data.columns[i],legendX+30,legendY+9+25*i);
+            text(this.data.columns[i],legendX+30,legendY+9+25*i); // text label
+            if (mouseYear) {
+                textAlign(RIGHT);
+                text(Math.round(mouseYearRow.arr[i]),legendX+200,legendY+9+25*i); //text value on mouse over
+                textAlign(LEFT);
+            }
         }
 
         // Loop over all rows and draw a line from the previous value to
