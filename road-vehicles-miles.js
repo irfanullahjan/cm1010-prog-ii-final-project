@@ -126,7 +126,7 @@ function RoadVehiclesMiles() {
         var fillclr = ['blue', 'green', 'yellow','orange','red'];
 
 
-        //Draw vertical line at mouseX below x-axis
+        //Draw vertical line at mouseX below x-axis and load data for mouseover year.
         if (mouseX > marginSize * 2 && mouseX < width - marginSize) {
             // Map mouseX to years rounded
             var mouseYear = map(mouseX, marginSize * 2, width - marginSize, this.startYear, this.endYear).toFixed(0);
@@ -139,7 +139,7 @@ function RoadVehiclesMiles() {
             var mouseYearRow = null;
         }
 
-        // Data ledgend
+        // Data legend
         textAlign(LEFT);
         var legendX = 90;
         var legendY = 20;

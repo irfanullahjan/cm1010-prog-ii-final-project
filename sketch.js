@@ -15,6 +15,7 @@ function setup() {
   // Add the visualisation objects here.
   gallery.addVisual(new RoadVehiclesMiles());
   gallery.addVisual(new TechDiversityRace());
+  gallery.addVisual(new RainbowTrout());
   gallery.addVisual(new TechDiversityGender());
   gallery.addVisual(new PayGapByJob2017());
   gallery.addVisual(new PayGapTimeSeries());
