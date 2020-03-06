@@ -74,7 +74,8 @@ function RainbowTrout() {
         this.minPayGap = 0;         // Pay equality (zero pay gap).
         this.maxPayGap = max(this.data.getColumn('weight'));
 
-        console.log(this.linearRegA());
+        this.linearFit = this.linearReg();
+        this.exponentialFit = this.exponentialReg();
     };
 
     this.destroy = function () {
@@ -131,6 +132,23 @@ function RainbowTrout() {
             stroke(0);
             ellipse(this.mapYearToWidth(current.year),this.mapPayGapToHeight(current.payGap),5);
         }
+        line(
+            this.mapYearToWidth(this.startYear),
+            this.mapPayGapToHeight(this.linearFit.a + this.linearFit.b * this.startYear),
+            this.mapYearToWidth(this.endYear),
+            this.mapPayGapToHeight(this.linearFit.a + this.linearFit.b * this.endYear),
+            );
+
+        stroke(0);
+        noFill();
+        beginShape();
+        for (var i = this.startYear; i < this.endYear; i++) {
+            vertex(
+                this.mapYearToWidth(i),
+                this.mapPayGapToHeight(this.exponentialFit.a*Math.pow(Math.E,this.exponentialFit.b*i))
+            );
+        }
+        endShape();
     };
 
     this.drawTitle = function () {
@@ -159,13 +177,35 @@ function RainbowTrout() {
             this.layout.topMargin);   // Bigger pay gap at top.
     };
 
-    // Liner regression calculations
-    this.linearRegA = function() {
+    // Liner least squares regression
+    this.linearReg = function() {
         var n = this.data.getRowCount();
+        var sumX = 0;
+        var sumY = 0;
         var sumXY = 0;
-        for (var i=0; i<this.data.getRowCount(); i++) {
+        var sumX2 = 0;
+        for (var i = 0; i < n; i++) {
             sumXY += this.data.getNum(i, 'length') * this.data.getNum(i, 'weight');
+            sumX2 += this.data.getNum(i, 'length') * this.data.getNum(i, 'length');
+            sumX += this.data.getNum(i, 'length');
+            sumY += this.data.getNum(i, 'weight');
         }
-        return sumXY;
+        var a, b;
+        b = ( n*sumXY - sumX * sumY ) / ( n*sumX2 - sumX*sumX );
+        a = ( sumY - b * sumX ) / n;
+        return {'a': a,'b': b};
+    }
+
+    // Exponential least squares regression
+    this.exponentialReg = function() {
+        var sum_x2 = 0, sum_lny = 0, sum_x = 0, sum_xlny = 0, n = this.data.getRowCount();
+        for(var i = 0; i < n; i++){
+          var x = this.data.getNum(i, 'length');
+          var y = this.data.getNum(i, 'weight');
+          sum_x2 += x*x, sum_lny += Math.log(y), sum_x += x, sum_xlny += x*Math.log(y);
+        }
+        var a = ((sum_lny*sum_x2)-(sum_x*sum_xlny))/((n*sum_x2)-sum_x*sum_x);
+        var b = ((n*sum_xlny)-(sum_x*sum_lny))/((n*sum_x2)-sum_x*sum_x);
+        return {'a': Math.exp(a),'b': b};
     }
 }
