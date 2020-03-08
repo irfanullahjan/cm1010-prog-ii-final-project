@@ -31,9 +31,6 @@ function TechDiversityGender() {
         numYTickLabels: 8,
     };
 
-    // Middle of the plot: for 50% line.
-    this.midX = (this.layout.plotWidth() / 2) + this.layout.leftMargin;
-
     // Default visualisation colours.
     this.femaleColour = color(255, 0, 0);
     this.maleColour = color(0, 255, 0);
@@ -75,6 +72,12 @@ function TechDiversityGender() {
         var lineHeight = (height - this.layout.topMargin) /
             this.data.getRowCount();
 
+        if ((mouseX - this.layout.leftMargin) / this.layout.plotWidth() > 0.095 && (mouseX - this.layout.leftMargin) / this.layout.plotWidth() < 0.905) {
+            var mousePercent = 100 * (mouseX - this.layout.leftMargin) / this.layout.plotWidth();
+        } else {
+            var mousePercent = 50;
+        }
+
         for (var i = 0; i < this.data.getRowCount(); i++) {
 
             // Calculate the y position for each company.
@@ -89,13 +92,19 @@ function TechDiversityGender() {
             };
 
             // Draw the company name in the left margin.
+            textStyle(BOLD);
             fill(0);
             noStroke();
             textAlign('right', 'top');
+            // Make company name bold if it % of female employees exceed mousePercent
+            if (company.female > mousePercent) {
+                fill(255, 0, 0);
+            } else {
+                fill(0, 255, 0);
+            }
             text(company.name,
                 this.layout.leftMargin - this.layout.pad,
                 lineY);
-
             // Draw female employees rectangle.
             fill(this.femaleColour);
             rect(this.layout.leftMargin,
@@ -111,14 +120,19 @@ function TechDiversityGender() {
                 lineHeight - this.layout.pad);
         }
 
-        // Draw 50% line
-        stroke(150);
+        // Draw line at mouseX
+        stroke(0);
         strokeWeight(1);
-        line(this.midX,
+        line(this.mapPercentToWidth(mousePercent) + this.layout.leftMargin,
             this.layout.topMargin,
-            this.midX,
+            this.mapPercentToWidth(mousePercent) + this.layout.leftMargin,
             this.layout.bottomMargin);
-
+        textAlign('center', 'top');
+        noStroke();
+        fill(0);
+        text(Math.round(mousePercent) + '%',
+            this.mapPercentToWidth(mousePercent) + this.layout.leftMargin,
+            this.layout.pad);
     };
 
     this.drawCategoryLabels = function () {
@@ -127,10 +141,6 @@ function TechDiversityGender() {
         textAlign('left', 'top');
         text('Female',
             this.layout.leftMargin,
-            this.layout.pad);
-        textAlign('center', 'top');
-        text('50%',
-            this.midX,
             this.layout.pad);
         textAlign('right', 'top');
         text('Male',

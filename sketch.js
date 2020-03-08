@@ -17,10 +17,9 @@ function setup() {
   gallery.addVisual(new TechDiversityRace());
   gallery.addVisual(new RainbowTrout());
   gallery.addVisual(new TechDiversityGender());
-  gallery.addVisual(new PayGapByJob2017());
   gallery.addVisual(new PayGapTimeSeries());
   gallery.addVisual(new ClimateChange());
-
+  gallery.addVisual(new PayGapByJob2017());
 }
 
 function draw() {
