@@ -103,7 +103,7 @@ function RainbowTrout() {
                     this.mapYearToWidth.bind(this));
             }
 
-        }    
+        }
 
         // Draw x and y axis.
         drawAxis(this.layout);
@@ -129,26 +129,62 @@ function RainbowTrout() {
                 'payGap': this.data.getNum(i, 'weight')
             };
 
-            stroke(0);
-            ellipse(this.mapYearToWidth(current.year),this.mapPayGapToHeight(current.payGap),5);
+            noStroke();
+            fill(0);
+            ellipse(this.mapYearToWidth(current.year), this.mapPayGapToHeight(current.payGap), 4);
         }
+        stroke(200, 0, 0);
         line(
             this.mapYearToWidth(this.startYear),
             this.mapPayGapToHeight(this.linearFit.a + this.linearFit.b * this.startYear),
             this.mapYearToWidth(this.endYear),
             this.mapPayGapToHeight(this.linearFit.a + this.linearFit.b * this.endYear),
-            );
+        );
 
-        stroke(0);
+        stroke(0, 150, 0);
         noFill();
         beginShape();
         for (var i = this.startYear; i < this.endYear; i++) {
-            vertex(
-                this.mapYearToWidth(i),
-                this.mapPayGapToHeight(this.exponentialFit.a*Math.pow(Math.E,this.exponentialFit.b*i))
-            );
+            // if value of function exceeds max weight, we stop drop drawing the curve further
+            if (this.exponentialFit.a * Math.pow(Math.E, this.exponentialFit.b * i) < max(this.data.getColumn('weight'))) {
+                vertex(
+                    this.mapYearToWidth(i),
+                    this.mapPayGapToHeight(this.exponentialFit.a * Math.pow(Math.E, this.exponentialFit.b * i))
+                );
+            }
         }
         endShape();
+
+
+        // Show dots on curves at mouseX and show values
+        if (mouseX >= this.layout.marginSize * 2 && mouseX < width - marginSize) { //only needed when mouseX is within the graph
+            var mouseLength = map(mouseX, marginSize * 2, width - marginSize, this.startYear, this.endYear);
+            var exponentialMouseWeight = this.exponentialFit.a * Math.pow(Math.E, this.exponentialFit.b * mouseLength);
+            var linearMouseWeight = this.linearFit.a + this.linearFit.b * mouseLength;
+
+            // dots on curves
+            noStroke();
+            fill(0, 150, 0);
+            // if statement to limit exponential curve to graph when value exceeds the max weight
+            if (this.exponentialFit.a * Math.pow(Math.E, this.exponentialFit.b * mouseLength) < max(this.data.getColumn('weight'))) {
+                ellipse(mouseX, this.mapPayGapToHeight(exponentialMouseWeight), 6);
+            }
+            fill(200, 0, 0);
+            ellipse(mouseX, this.mapPayGapToHeight(linearMouseWeight), 6);
+
+            // values in upper left corner
+            fill(255);
+            stroke(0);
+            rect(this.layout.marginSize * 2 + 20, this.layout.marginSize + 20, 100, 60);
+            textAlign(RIGHT);
+            fill(0, 150, 0);
+            noStroke();
+            text(exponentialMouseWeight.toFixed(1), this.layout.marginSize * 2 + 110, this.layout.marginSize + 40);
+            fill(200, 0, 0);
+            text(linearMouseWeight.toFixed(1), this.layout.marginSize * 2 + 110, this.layout.marginSize + 65);
+        } else {
+            mouseLength = null;
+        }
     };
 
     this.drawTitle = function () {
@@ -163,8 +199,8 @@ function RainbowTrout() {
 
     this.mapYearToWidth = function (value) {
         return map(value,
-            this.startYear - 10,
-            this.endYear + 10,
+            this.startYear,
+            this.endYear,
             this.layout.leftMargin,   // Draw left-to-right from margin.
             this.layout.rightMargin);
     };
@@ -172,40 +208,40 @@ function RainbowTrout() {
     this.mapPayGapToHeight = function (value) {
         return map(value,
             this.minPayGap,
-            this.maxPayGap + 100,
+            this.maxPayGap,
             this.layout.bottomMargin, // Smaller pay gap at bottom.
             this.layout.topMargin);   // Bigger pay gap at top.
     };
 
     // Liner least squares regression
-    this.linearReg = function() {
+    this.linearReg = function () {
         var n = this.data.getRowCount();
-        var sumX = 0;
-        var sumY = 0;
-        var sumXY = 0;
-        var sumX2 = 0;
+        var sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
         for (var i = 0; i < n; i++) {
-            sumXY += this.data.getNum(i, 'length') * this.data.getNum(i, 'weight');
-            sumX2 += this.data.getNum(i, 'length') * this.data.getNum(i, 'length');
-            sumX += this.data.getNum(i, 'length');
-            sumY += this.data.getNum(i, 'weight');
+            var x = this.data.getNum(i, 'length');
+            var y = this.data.getNum(i, 'weight');
+            sumXY += x * y;
+            sumX2 += x * x;
+            sumX += x;
+            sumY += y;
         }
         var a, b;
-        b = ( n*sumXY - sumX * sumY ) / ( n*sumX2 - sumX*sumX );
-        a = ( sumY - b * sumX ) / n;
-        return {'a': a,'b': b};
+        b = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        a = (sumY - b * sumX) / n;
+        return { 'a': a, 'b': b };
     }
 
     // Exponential least squares regression
-    this.exponentialReg = function() {
-        var sum_x2 = 0, sum_lny = 0, sum_x = 0, sum_xlny = 0, n = this.data.getRowCount();
-        for(var i = 0; i < n; i++){
-          var x = this.data.getNum(i, 'length');
-          var y = this.data.getNum(i, 'weight');
-          sum_x2 += x*x, sum_lny += Math.log(y), sum_x += x, sum_xlny += x*Math.log(y);
+    // Adopted from https://stackoverflow.com/questions/34951671/js-exponential-curve-fit
+    this.exponentialReg = function () {
+        var sumX2 = 0, sumlnY = 0, sumX = 0, sumXlnY = 0, n = this.data.getRowCount();
+        for (var i = 0; i < n; i++) {
+            var x = this.data.getNum(i, 'length');
+            var y = this.data.getNum(i, 'weight');
+            sumX2 += x * x, sumlnY += Math.log(y), sumX += x, sumXlnY += x * Math.log(y);
         }
-        var a = ((sum_lny*sum_x2)-(sum_x*sum_xlny))/((n*sum_x2)-sum_x*sum_x);
-        var b = ((n*sum_xlny)-(sum_x*sum_lny))/((n*sum_x2)-sum_x*sum_x);
-        return {'a': Math.exp(a),'b': b};
+        var a = ((sumlnY * sumX2) - (sumX * sumXlnY)) / ((n * sumX2) - sumX * sumX);
+        var b = ((n * sumXlnY) - (sumX * sumlnY)) / ((n * sumX2) - sumX * sumX);
+        return { 'a': Math.exp(a), 'b': b };
     }
 }

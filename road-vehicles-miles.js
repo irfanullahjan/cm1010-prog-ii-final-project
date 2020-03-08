@@ -61,10 +61,10 @@ function RoadVehiclesMiles() {
                 self.loaded = true;
                 // Loops to accumulate numbers in columns. Cosecutive columns are added together.
                 for (var i = 0; i < inputdata.getRowCount(); i++) {
-                    for (var j=0; j < inputdata.getColumnCount(); j++)
-                    if (j>1) {
-                        inputdata.setNum(i, j, inputdata.getNum(i,j-1)+inputdata.getNum(i,j));
-                    }
+                    for (var j = 0; j < inputdata.getColumnCount(); j++)
+                        if (j > 1) {
+                            inputdata.setNum(i, j, inputdata.getNum(i, j - 1) + inputdata.getNum(i, j));
+                        }
                 }
                 return inputdata;
             }
@@ -88,7 +88,7 @@ function RoadVehiclesMiles() {
 
         // Find min and max pay gap for mapping to canvas height.
         this.minTraffic = 0;         // Pay equality (zero pay gap).
-        this.maxTraffic = max(this.data.getColumn(this.data.getColumnCount()-1));
+        this.maxTraffic = max(this.data.getColumn(this.data.getColumnCount() - 1));
     };
 
     this.destroy = function () {
@@ -107,7 +107,7 @@ function RoadVehiclesMiles() {
         drawYAxisTickLabels(this.minTraffic,
             this.maxTraffic,
             this.layout,
-            this.maprafficToHeight.bind(this),
+            this.mapTrafficToHeight.bind(this),
             0);
 
         // Draw x and y axis.
@@ -123,39 +123,8 @@ function RoadVehiclesMiles() {
         var previous;
         var numYears = this.endYear - this.startYear;
 
-        var fillclr = ['blue', 'green', 'yellow','orange','red'];
+        var fillclr = ['blue', 'green', 'yellow', 'orange', 'red'];
 
-
-        //Draw vertical line at mouseX below x-axis and load data for mouseover year.
-        if (mouseX > marginSize * 2 && mouseX < width - marginSize) {
-            // Map mouseX to years rounded
-            var mouseYear = map(mouseX, marginSize * 2, width - marginSize, this.startYear, this.endYear).toFixed(0);
-            var mouseYearRow = this.dataOriginal.findRow(mouseYear, 'Year');
-            console.log(mouseYearRow);
-            stroke(0);
-            line(mouseX, marginSize, mouseX, height - marginSize);
-        } else {
-            var mouseYear = null;
-            var mouseYearRow = null;
-        }
-
-        // Data legend
-        textAlign(LEFT);
-        var legendX = 90;
-        var legendY = 20;
-        for (var i = 1; i < this.data.getColumnCount(); i++) {
-            stroke('black');
-            fill(fillclr[i-1]);
-            rect(legendX,legendY+25*i,15,15); // colored square
-            noStroke();
-            fill(0);
-            text(this.data.columns[i],legendX+30,legendY+9+25*i); // text label
-            if (mouseYear) {
-                textAlign(RIGHT);
-                text(Math.round(mouseYearRow.arr[i]),legendX+200,legendY+9+25*i); //text value on mouse over
-                textAlign(LEFT);
-            }
-        }
 
         // Loop over all rows and draw a line from the previous value to
         // the current.
@@ -163,7 +132,7 @@ function RoadVehiclesMiles() {
             previous = null;
             beginShape();
             for (var i = 0; i < this.data.getRowCount(); i++) {
-                fill(fillclr[j-1]);
+                fill(fillclr[j - 1]);
                 noStroke();
                 // Create an object to store data for the current year.
                 var current = {
@@ -173,7 +142,7 @@ function RoadVehiclesMiles() {
                 };
                 vertex(
                     this.mapYearToWidth(current.year),
-                    this.maprafficToHeight(current.Traffic)
+                    this.mapTrafficToHeight(current.Traffic)
                 );
                 if (previous != null) {
                     // Draw line segment connecting previous year to current
@@ -198,13 +167,72 @@ function RoadVehiclesMiles() {
             }
             vertex(
                 this.mapYearToWidth(this.endYear),
-                this.maprafficToHeight(0)
+                this.mapTrafficToHeight(0)
             );
             vertex(
                 this.mapYearToWidth(this.startYear),
-                this.maprafficToHeight(0)
+                this.mapTrafficToHeight(0)
             );
             endShape();
+        }
+
+
+        //Show legend, load original and modified data for mouseover year then display it along with legend and show a line on graph
+        if (mouseX > marginSize * 2 && mouseX < width - marginSize) {
+            // Map mouseX to years rounded
+            var mouseYear = map(mouseX, marginSize * 2, width - marginSize, this.startYear, this.endYear).toFixed(0);
+            var mouseYearOrigData = this.dataOriginal.findRow(mouseYear, 'Year');
+            var mouseYearModiData = this.data.findRow(mouseYear, 'Year');
+            stroke(0);
+            line(
+                this.mapYearToWidth(mouseYear),
+                this.mapTrafficToHeight(mouseYearModiData.arr[5]),
+                this.mapYearToWidth(mouseYear),
+                this.mapTrafficToHeight(0),
+            );
+            noStroke();
+            fill(255);
+            ellipse(
+                this.mapYearToWidth(mouseYear),
+                this.mapTrafficToHeight(15),
+                50,
+                30
+            );
+            textAlign(CENTER);
+            fill(0);
+            text(
+                mouseYear,
+                this.mapYearToWidth(mouseYear),
+                this.mapTrafficToHeight(15),
+            )
+        } else {
+            var mouseYear = null;
+            var mouseYearOrigData = null;
+        }
+        textAlign(LEFT);
+        var legendX = 90;
+        var legendY = 20;
+        for (var i = 1; i < this.data.getColumnCount(); i++) {
+            stroke('black');
+            fill(fillclr[i - 1]);
+            rect(legendX, legendY + 25 * i, 15, 15); // colored square
+            noStroke();
+            fill(0);
+            text(this.data.columns[i], legendX + 30, legendY + 9 + 25 * i); // text label
+            if (mouseYear) {
+                textAlign(RIGHT);
+                text(Math.round(mouseYearOrigData.arr[i]), legendX + 200, legendY + 9 + 25 * i); //text value on mouse over
+                textAlign(LEFT);
+            }
+        }
+        // total traffic at mouse position
+        if (mouseYear) {
+            textStyle(BOLD);
+            textAlign(RIGHT);
+            text(Math.round(mouseYearModiData.arr[5]), legendX + 200, legendY + 9 + 150); //text value on mouse over
+            textAlign(LEFT);
+            text('Total traffic', legendX + 30, legendY + 9 + 150); //text value on mouse over
+            textStyle(NORMAL);
         }
     };
 
@@ -226,7 +254,7 @@ function RoadVehiclesMiles() {
             this.layout.rightMargin);
     };
 
-    this.maprafficToHeight = function (value) {
+    this.mapTrafficToHeight = function (value) {
         return map(value,
             this.minTraffic,
             this.maxTraffic,
