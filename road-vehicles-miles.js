@@ -3,8 +3,7 @@ function RoadVehiclesMiles() {
     // Name for the visualisation to appear in the menu bar.
     this.name = 'Road Vehicles: 1949 to 2018';
 
-    // Each visualisation must have a unique ID with no special
-    // characters.
+    // Each visualisation must have a unique ID with no special characters.
     this.id = 'road-vehicles-miles';
 
     // Title to display above the plot.
@@ -16,8 +15,7 @@ function RoadVehiclesMiles() {
 
     var marginSize = 35;
 
-    // Layout object to store all common plot layout parameters and
-    // methods.
+    // Layout object to store all common plot layout parameters and methods.
     this.layout = {
         marginSize: marginSize,
 
@@ -55,11 +53,10 @@ function RoadVehiclesMiles() {
         var self = this;
         this.data = loadTable(
             './data/road-vehicles/road-vehicle-miles.csv', 'csv', 'header',
-            // Callback function to set the value
-            // this.loaded to true.
+            // Callback function to set the value this.loaded to true.
             function (inputdata) {
                 self.loaded = true;
-                // Loops to accumulate numbers in columns. Cosecutive columns are added together.
+                // Loops to accumulate numbers in columns. Consecutive columns are added together to stack them.
                 for (var i = 0; i < inputdata.getRowCount(); i++) {
                     for (var j = 0; j < inputdata.getColumnCount(); j++)
                         if (j > 1) {
@@ -69,6 +66,9 @@ function RoadVehiclesMiles() {
                 return inputdata;
             }
         );
+
+        // Since the above data has been modified for stacked chart, the original values are loaded again into
+        // another variable to able to display the value at mouse position.
         this.dataOriginal = loadTable(
             './data/road-vehicles/road-vehicle-miles.csv', 'csv', 'header',
             function (inputdata) {
@@ -80,14 +80,13 @@ function RoadVehiclesMiles() {
     this.setup = function () {
         // Font defaults.
         textSize(16);
-        //Cumulatively adds columns to create stacked chart
 
         // Set min and max years: assumes data is sorted by date.
         this.startYear = this.data.getNum(0, 'Year');
         this.endYear = this.data.getNum(this.data.getRowCount() - 1, 'Year');
 
         // Find min and max pay gap for mapping to canvas height.
-        this.minTraffic = 0;         // Pay equality (zero pay gap).
+        this.minTraffic = 0;
         this.maxTraffic = max(this.data.getColumn(this.data.getColumnCount() - 1));
     };
 
@@ -123,16 +122,20 @@ function RoadVehiclesMiles() {
         var previous;
         var numYears = this.endYear - this.startYear;
 
-        var fillclr = ['blue', 'green', 'yellow', 'orange', 'red'];
+        var fillColour = ['blue', 'green', 'yellow', 'orange', 'red'];
 
 
-        // Loop over all rows and draw a line from the previous value to
-        // the current.
+        // Loop over all rows and for each row, draw a shape between that the line for
+        // that row and x-axis to fill it with colour.
         for (var j = this.data.getColumnCount() - 1; j > 0; j--) {
+
+            // Need to reset previous for each row of data.
             previous = null;
+
+            // Shape between line and x-axis to be filled with color
             beginShape();
             for (var i = 0; i < this.data.getRowCount(); i++) {
-                fill(fillclr[j - 1]);
+                fill(fillColour[j - 1]);
                 noStroke();
                 // Create an object to store data for the current year.
                 var current = {
@@ -145,9 +148,6 @@ function RoadVehiclesMiles() {
                     this.mapTrafficToHeight(current.Traffic)
                 );
                 if (previous != null) {
-                    // Draw line segment connecting previous year to current
-                    // year pay gap.
-
 
                     // The number of x-axis labels to skip so that only
                     // numXTickLabels are drawn.
@@ -162,9 +162,11 @@ function RoadVehiclesMiles() {
 
                 // Assign current year to previous year so that it is available
                 // during the next iteration of this loop to give us the start
-                // position of the next line segment.
+                // position of the next vertex in the shape.
                 previous = current;
             }
+
+            //Final two vertexes in the shape to be able to fill the area below line with color
             vertex(
                 this.mapYearToWidth(this.endYear),
                 this.mapTrafficToHeight(0)
@@ -176,11 +178,10 @@ function RoadVehiclesMiles() {
             endShape();
         }
 
-
         //Show legend, load original and modified data for mouseover year then display it along with legend and show a line on graph
-        if (mouseX > marginSize * 2 && mouseX < width - marginSize) {
+        if (mouseX > this.layout.leftMargin && mouseX < this.layout.rightMargin) {
             // Map mouseX to years rounded
-            var mouseYear = map(mouseX, marginSize * 2, width - marginSize, this.startYear, this.endYear).toFixed(0);
+            var mouseYear = map(mouseX, this.layout.leftMargin, this.layout.rightMargin, this.startYear, this.endYear).toFixed(0);
             var mouseYearOrigData = this.dataOriginal.findRow(mouseYear, 'Year');
             var mouseYearModiData = this.data.findRow(mouseYear, 'Year');
             stroke(0);
@@ -214,7 +215,7 @@ function RoadVehiclesMiles() {
         var legendY = 20;
         for (var i = 1; i < this.data.getColumnCount(); i++) {
             stroke('black');
-            fill(fillclr[i - 1]);
+            fill(fillColour[i - 1]);
             rect(legendX, legendY + 25 * i, 15, 15); // colored square
             noStroke();
             fill(0);
@@ -222,7 +223,9 @@ function RoadVehiclesMiles() {
             if (mouseYear) {
                 textAlign(RIGHT);
                 text(Math.round(mouseYearOrigData.arr[i]), legendX + 200, legendY + 9 + 25 * i); //text value on mouse over
+                text(Math.round(100 * mouseYearOrigData.arr[i] / mouseYearModiData.arr[5]) + '%', legendX + 250, legendY + 9 + 25 * i); //text value on mouse over
                 textAlign(LEFT);
+
             }
         }
         // total traffic at mouse position

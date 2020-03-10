@@ -10,10 +10,11 @@ function TechDiversityRace() {
     // Property to represent whether data has been loaded.
     this.loaded = false;
 
-    // Values in this array are incremented smoothly to created animation effect. Initial values are given so the chart animates on load
-    this.currentState = [60,60,60,60,60,60];
+    // Values in this array are incremented smoothly to created animation effect.
+    // Initial values are given so the chart animates on load.
+    this.currentState = [60, 60, 60, 60, 60, 60];
     // Values by which to increment currentState each frame in order to reach targetState
-    this.incrementArr = [0,0,0,0,0,0];
+    this.incrementArr = [0, 0, 0, 0, 0, 0];
 
     // Preload the data. This function is called automatically by the
     // gallery when a visualisation is added.
@@ -48,7 +49,8 @@ function TechDiversityRace() {
 
     this.destroy = function () {
         this.select.remove();
-        this.currentState = [60,60,60,60,60,60]; //resets pie to equal sections so it animates when visualization is clicked again
+        this.currentState = [60, 60, 60, 60, 60, 60];
+        // Resets pie to equal sections so it animates on start.
     };
 
     // Create a new pie chart object.

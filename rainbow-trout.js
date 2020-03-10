@@ -66,13 +66,13 @@ function RainbowTrout() {
         // Font defaults.
         textSize(16);
 
-        // Set min and max years: assumes data is sorted by date.
-        this.startYear = this.data.getNum(0, 'length');
-        this.endYear = this.data.getNum(this.data.getRowCount() - 1, 'length');
+        // Set min and max lengths: assumes data is sorted by date.
+        this.startLength = this.data.getNum(0, 'length');
+        this.endLength = this.data.getNum(this.data.getRowCount() - 1, 'length');
 
-        // Find min and max pay gap for mapping to canvas height.
-        this.minPayGap = 0;         // Pay equality (zero pay gap).
-        this.maxPayGap = max(this.data.getColumn('weight'));
+        // Find min and max weight for mapping to canvas height.
+        this.minWeight = 0;
+        this.maxWeight = max(this.data.getColumn('weight'));
 
         this.linearFit = this.linearReg();
         this.exponentialFit = this.exponentialReg();
@@ -91,16 +91,16 @@ function RainbowTrout() {
         this.drawTitle();
 
         // Draw all y-axis labels.
-        drawYAxisTickLabels(this.minPayGap,
-            this.maxPayGap,
+        drawYAxisTickLabels(this.minWeight,
+            this.maxWeight,
             this.layout,
-            this.mapPayGapToHeight.bind(this),
+            this.mapWeightToHeight.bind(this),
             0);
 
-        for (var i = this.startYear; i <= this.endYear; i++) {
+        for (var i = this.startLength; i <= this.endLength; i++) {
             if (i % this.layout.numXTickLabels == 0) {
                 drawXAxisTickLabel(i, this.layout,
-                    this.mapYearToWidth.bind(this));
+                    this.mapLengthToWidth.bind(this));
             }
 
         }
@@ -113,43 +113,42 @@ function RainbowTrout() {
             this.yAxisLabel,
             this.layout);
 
-        // Plot all pay gaps between startYear and endYear using the width
+        // Plot all weights between startLength and endLength using the width
         // of the canvas minus margins.
         var previous;
-        var numYears = this.endYear - this.startYear;
 
         // Loop over all rows and draw a line from the previous value to
         // the current.
         for (var i = 0; i < this.data.getRowCount(); i++) {
 
-            // Create an object to store data for the current year.
+            // Create an object to store data for the current length.
             var current = {
                 // Convert strings to numbers.
-                'year': this.data.getNum(i, 'length'),
-                'payGap': this.data.getNum(i, 'weight')
+                'length': this.data.getNum(i, 'length'),
+                'weight': this.data.getNum(i, 'weight')
             };
 
             noStroke();
             fill(0);
-            ellipse(this.mapYearToWidth(current.year), this.mapPayGapToHeight(current.payGap), 4);
+            ellipse(this.mapLengthToWidth(current.length), this.mapWeightToHeight(current.weight), 4);
         }
         stroke(200, 0, 0);
         line(
-            this.mapYearToWidth(this.startYear),
-            this.mapPayGapToHeight(this.linearFit.a + this.linearFit.b * this.startYear),
-            this.mapYearToWidth(this.endYear),
-            this.mapPayGapToHeight(this.linearFit.a + this.linearFit.b * this.endYear),
+            this.mapLengthToWidth(this.startLength),
+            this.mapWeightToHeight(this.linearFit.a + this.linearFit.b * this.startLength),
+            this.mapLengthToWidth(this.endLength),
+            this.mapWeightToHeight(this.linearFit.a + this.linearFit.b * this.endLength),
         );
 
         stroke(0, 150, 0);
         noFill();
         beginShape();
-        for (var i = this.startYear; i < this.endYear; i++) {
+        for (var i = this.startLength; i < this.endLength; i++) {
             // if value of function exceeds max weight, we stop drop drawing the curve further
             if (this.exponentialFit.a * Math.pow(Math.E, this.exponentialFit.b * i) < max(this.data.getColumn('weight'))) {
                 vertex(
-                    this.mapYearToWidth(i),
-                    this.mapPayGapToHeight(this.exponentialFit.a * Math.pow(Math.E, this.exponentialFit.b * i))
+                    this.mapLengthToWidth(i),
+                    this.mapWeightToHeight(this.exponentialFit.a * Math.pow(Math.E, this.exponentialFit.b * i))
                 );
             }
         }
@@ -157,8 +156,8 @@ function RainbowTrout() {
 
 
         // Show dots on curves at mouseX and show values
-        if (mouseX >= this.layout.marginSize * 2 && mouseX < width - marginSize) { //only needed when mouseX is within the graph
-            var mouseLength = map(mouseX, marginSize * 2, width - marginSize, this.startYear, this.endYear);
+        if (mouseX >= this.layout.leftMargin && mouseX < this.layout.rightMargin) { //only needed when mouseX is within the graph
+            var mouseLength = map(mouseX, this.layout.leftMargin, this.layout.rightMargin, this.startLength, this.endLength);
             var exponentialMouseWeight = this.exponentialFit.a * Math.pow(Math.E, this.exponentialFit.b * mouseLength);
             var linearMouseWeight = this.linearFit.a + this.linearFit.b * mouseLength;
 
@@ -167,21 +166,23 @@ function RainbowTrout() {
             fill(0, 150, 0);
             // if statement to limit exponential curve to graph when value exceeds the max weight
             if (this.exponentialFit.a * Math.pow(Math.E, this.exponentialFit.b * mouseLength) < max(this.data.getColumn('weight'))) {
-                ellipse(mouseX, this.mapPayGapToHeight(exponentialMouseWeight), 6);
+                ellipse(mouseX, this.mapWeightToHeight(exponentialMouseWeight), 6);
             }
             fill(200, 0, 0);
-            ellipse(mouseX, this.mapPayGapToHeight(linearMouseWeight), 6);
+            ellipse(mouseX, this.mapWeightToHeight(linearMouseWeight), 6);
 
             // values in upper left corner
-            fill(255);
-            stroke(0);
-            rect(this.layout.marginSize * 2 + 20, this.layout.marginSize + 20, 100, 60);
+            fill(230);
+            rect(this.layout.leftMargin + 20, this.layout.marginSize + 20, 165, 60);
+            fill(0);
+            textAlign(LEFT);
+            text('Exponential',this.layout.leftMargin + 30,this.layout.marginSize+40);
+            text('Linear',this.layout.leftMargin + 30,this.layout.marginSize+65);
             textAlign(RIGHT);
             fill(0, 150, 0);
-            noStroke();
-            text(exponentialMouseWeight.toFixed(1), this.layout.marginSize * 2 + 110, this.layout.marginSize + 40);
+            text(exponentialMouseWeight.toFixed(1), this.layout.leftMargin + 175, this.layout.marginSize + 40);
             fill(200, 0, 0);
-            text(linearMouseWeight.toFixed(1), this.layout.marginSize * 2 + 110, this.layout.marginSize + 65);
+            text(linearMouseWeight.toFixed(1), this.layout.leftMargin + 175, this.layout.marginSize + 65);
         } else {
             mouseLength = null;
         }
@@ -197,20 +198,20 @@ function RainbowTrout() {
             this.layout.topMargin - (this.layout.marginSize / 2));
     };
 
-    this.mapYearToWidth = function (value) {
+    this.mapLengthToWidth = function (value) {
         return map(value,
-            this.startYear,
-            this.endYear,
+            this.startLength,
+            this.endLength,
             this.layout.leftMargin,   // Draw left-to-right from margin.
             this.layout.rightMargin);
     };
 
-    this.mapPayGapToHeight = function (value) {
+    this.mapWeightToHeight = function (value) {
         return map(value,
-            this.minPayGap,
-            this.maxPayGap,
-            this.layout.bottomMargin, // Smaller pay gap at bottom.
-            this.layout.topMargin);   // Bigger pay gap at top.
+            this.minWeight,
+            this.maxWeight,
+            this.layout.bottomMargin, // Less weight at bottom.
+            this.layout.topMargin);   // More weight at top.
     };
 
     // Liner least squares regression

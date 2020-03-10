@@ -32,8 +32,8 @@ function TechDiversityGender() {
     };
 
     // Default visualisation colours.
-    this.femaleColour = color(255, 0, 0);
-    this.maleColour = color(0, 255, 0);
+    this.femaleColour = color('crimson');
+    this.maleColour = color('deepskyblue');
 
     // Property to represent whether data has been loaded.
     this.loaded = false;
@@ -58,6 +58,7 @@ function TechDiversityGender() {
     };
 
     this.destroy = function () {
+        textStyle(NORMAL); //to stop text of other charts being affected
     };
 
     this.draw = function () {
@@ -98,9 +99,9 @@ function TechDiversityGender() {
             textAlign('right', 'top');
             // Make company name bold if it % of female employees exceed mousePercent
             if (company.female > mousePercent) {
-                fill(255, 0, 0);
+                fill(this.femaleColour);
             } else {
-                fill(0, 255, 0);
+                fill(this.maleColour);
             }
             text(company.name,
                 this.layout.leftMargin - this.layout.pad,
