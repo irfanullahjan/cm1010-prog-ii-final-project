@@ -158,14 +158,14 @@ function RainbowTrout() {
         // Show dots on curves at mouseX and show values
         if (mouseX >= this.layout.leftMargin && mouseX < this.layout.rightMargin) { //only needed when mouseX is within the graph
             var mouseLength = map(mouseX, this.layout.leftMargin, this.layout.rightMargin, this.startLength, this.endLength);
-            var exponentialMouseWeight = this.exponentialFit.a * Math.pow(Math.E, this.exponentialFit.b * mouseLength);
+            var exponentialMouseWeight = this.exponentialFit.a * Math.exp(this.exponentialFit.b * mouseLength);
             var linearMouseWeight = this.linearFit.a + this.linearFit.b * mouseLength;
 
             // dots on curves
             noStroke();
             fill(0, 150, 0);
             // if statement to limit exponential curve to graph when value exceeds the max weight
-            if (this.exponentialFit.a * Math.pow(Math.E, this.exponentialFit.b * mouseLength) < max(this.data.getColumn('weight'))) {
+            if (this.exponentialFit.a * Math.exp(this.exponentialFit.b * mouseLength) < max(this.data.getColumn('weight'))) {
                 ellipse(mouseX, this.mapWeightToHeight(exponentialMouseWeight), 6);
             }
             fill(200, 0, 0);
@@ -239,7 +239,10 @@ function RainbowTrout() {
         for (var i = 0; i < n; i++) {
             var x = this.data.getNum(i, 'length');
             var y = this.data.getNum(i, 'weight');
-            sumX2 += x * x, sumlnY += Math.log(y), sumX += x, sumXlnY += x * Math.log(y);
+            sumX2 += x * x;
+            sumlnY += Math.log(y);
+            sumX += x;
+            sumXlnY += x * Math.log(y);
         }
         var a = ((sumlnY * sumX2) - (sumX * sumXlnY)) / ((n * sumX2) - sumX * sumX);
         var b = ((n * sumXlnY) - (sumX * sumlnY)) / ((n * sumX2) - sumX * sumX);
