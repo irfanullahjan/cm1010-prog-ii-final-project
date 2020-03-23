@@ -85,7 +85,7 @@ function RoadVehiclesMiles() {
         this.startYear = this.data.getNum(0, 'Year');
         this.endYear = this.data.getNum(this.data.getRowCount() - 1, 'Year');
 
-        // Find min and max pay gap for mapping to canvas height.
+        // Find min and max traffic for mapping to canvas height.
         this.minTraffic = 0;
         this.maxTraffic = max(this.data.getColumn(this.data.getColumnCount() - 1));
     };
@@ -117,7 +117,7 @@ function RoadVehiclesMiles() {
             this.yAxisLabel,
             this.layout);
 
-        // Plot all pay gaps between startYear and endYear using the width
+        // Plot all traffic values between startYear and endYear using the width
         // of the canvas minus margins.
         var previous;
         var numYears = this.endYear - this.startYear;
@@ -261,7 +261,7 @@ function RoadVehiclesMiles() {
         return map(value,
             this.minTraffic,
             this.maxTraffic,
-            this.layout.bottomMargin, // Smaller pay gap at bottom.
-            this.layout.topMargin);   // Bigger pay gap at top.
+            this.layout.bottomMargin, // Smaller traffic at bottom.
+            this.layout.topMargin);   // Bigger traffic at top.
     };
 }
